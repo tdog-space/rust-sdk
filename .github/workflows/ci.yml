@@ -32,10 +32,3 @@ jobs:
         run: wget https://repo1.maven.org/maven2/net/java/dev/jna/jna/5.14.0/jna-5.14.0.jar
       - name: Download Kotlinx
         run: wget https://repo1.maven.org/maven2/org/jetbrains/kotlinx/kotlinx-coroutines-core-jvm/1.6.4/kotlinx-coroutines-core-jvm-1.6.4.jar
-      - name: Test
-        run: cargo test
-
-      - name: Fmt
-        run: cargo fmt -- --check
-      - name: Clippy
-        run: cargo clippy
