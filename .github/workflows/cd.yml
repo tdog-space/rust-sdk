@@ -34,7 +34,7 @@ jobs:
           private-key: ${{ secrets.MONOREPO_GH_APP_PRIVATE_KEY }}
           owner: ${{ github.repository_owner }}
           repositories: |
-            sprucekit-mobile
+            rust-sdk
       - name: Get GitHub App User ID
         id: get-user-id
         run: echo "user-id=$(gh api "/users/${{ steps.app-token.outputs.app-slug }}[bot]" --jq .id)" >> "$GITHUB_OUTPUT"
@@ -72,7 +72,7 @@ jobs:
 
       - name: Update Swift Package definition
         run: |
-          sed -i '' 's/binaryTarget.*/binaryTarget(name: "RustFramework", url: "https:\/\/github.com\/spruceid\/sprucekit-mobile\/releases\/download\/${{ github.event.inputs.version }}\/RustFramework.xcframework.zip", checksum: "${{ env.XCF_CHECKSUM }}"),/' Package.swift
+          sed -i '' 's/binaryTarget.*/binaryTarget(name: "RustFramework", url: "https:\/\/github.com\/thanhtan541\/rust-sdk\/releases\/download\/${{ github.event.inputs.version }}\/RustFramework.xcframework.zip", checksum: "${{ env.XCF_CHECKSUM }}"),/' Package.swift
 
       # If this fails due to a new commit on the main branch, it's a feature not a bug!
       # This way, there will be no confusion around what was included in the release.
