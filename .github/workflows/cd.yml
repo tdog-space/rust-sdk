@@ -65,15 +65,33 @@ jobs:
         run: cargo swift package -p ios -n MobileSdkRs --release
         working-directory: rust
 
-      - name: Compress XCFramework
-        run: |
-          zip -9 -r RustFramework.xcframework.zip rust/MobileSdkRs/RustFramework.xcframework
-          echo "XCF_CHECKSUM=`swift package compute-checksum RustFramework.xcframework.zip`" >> $GITHUB_ENV
+      - name: Checkout target repository
+        uses: actions/checkout@v4
+        with:
+          repository: tdog-space/mobile-sdk-swift
+          path: target-repo
+          token: ${{ steps.app-token.outputs.token }} # Personal Access Token with push access to target repo
 
-      - name: Update Swift Package definition
+      - name: Copy all files from MobileSdkRs to target repository
         run: |
-          sed -i '' 's/binaryTarget.*/binaryTarget(name: "RustFramework", url: "https:\/\/github.com\/tdog-space\/rust-sdk\/releases\/download\/${{ github.event.inputs.version }}\/RustFramework.xcframework.zip", checksum: "${{ env.XCF_CHECKSUM }}"),/' Package.swift
-          cat Package.swift
+          rm -rf target-repo/*
+          cp -r rust/MobileSdkRs/. target-repo/
+          cd target-repo
+          git add .
+          git commit -m "Update Swift package files from MobileSdkRs" || echo "No changes to commit"
+          git push origin main
+        continue-on-error: true # In case there are no changes to commit
+
+      # - name: Compress XCFramework
+      #   run: |
+      #     zip -9 -r RustFramework.xcframework.zip MobileSdkRs/RustFramework.xcframework
+      #     echo "XCF_CHECKSUM=`swift package compute-checksum RustFramework.xcframework.zip`" >> $GITHUB_ENV
+      #   working-directory: rust
+
+      # - name: Update Swift Package definition
+      #   run: |
+      #     sed -i '' 's/binaryTarget.*/binaryTarget(name: "RustFramework", url: "https:\/\/github.com\/tdog-space\/rust-sdk\/releases\/download\/${{ github.event.inputs.version }}\/RustFramework.xcframework.zip", checksum: "${{ env.XCF_CHECKSUM }}"),/' rust/MobileSdk.Package.swift
+      #     cat Package.swift
 
       # If this fails due to a new commit on the main branch, it's a feature not a bug!
       # This way, there will be no confusion around what was included in the release.
@@ -85,13 +103,6 @@ jobs:
           git push
           git tag ${{ github.event.inputs.version }} -m "${{ github.event.inputs.version }}"
           git push --tags
-
-      - name: Create release and attach XCFramework binary artifact
-        uses: ncipollo/release-action@v1
-        with:
-          artifacts: "RustFramework.xcframework.zip"
-          tag: ${{ github.event.inputs.version }}
-          name: ${{ github.event.inputs.version }}
 
       - name: Revert changes to Package.swift for local development
         if: steps.commit.outcome == 'success'
